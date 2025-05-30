@@ -1,2 +1,2 @@
-APP_URL=<https://dicoding-stories.netlify.app/>
+APP_URL=<https://story-appss.netlify.app/>
 MAP_SERVICE_API_KEY=<not_required>

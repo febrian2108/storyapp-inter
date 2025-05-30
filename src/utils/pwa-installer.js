@@ -18,7 +18,7 @@ class PwaInstaller {
       
       if (installButton) {
         installButton.addEventListener('click', function() {
-          window.location.href = 'https://dicostory.netlify.app';
+          window.location.href = 'https://story-appss.netlify.app/';
         });
       }
       
