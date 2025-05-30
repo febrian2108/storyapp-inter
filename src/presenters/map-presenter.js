@@ -1,6 +1,6 @@
 class MapPresenter {
-    constructor(config, view) {
-        this._config = config;
+    constructor(model, view) {
+        this._model = model;
         this._view = view;
     }
 
@@ -8,7 +8,7 @@ class MapPresenter {
         try {
             this._view.showLoading();
 
-            const stories = await this._config.getStories(1, 100, 1);
+            const stories = await this._model.getStories(1, 100, 1);
 
             const storiesWithLocation = stories.filter(story => story.lat && story.lon);
 

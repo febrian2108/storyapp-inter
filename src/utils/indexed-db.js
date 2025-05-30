@@ -1,5 +1,5 @@
 class IdbHelper {
-    static DB_NAME = 'storyapps-db';
+    static DB_NAME = 'story-db';
     static DB_VERSION = 1;
     static STORE_STORIES = 'stories';
     static STORE_FAVORITES = 'favorites';

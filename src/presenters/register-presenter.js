@@ -1,6 +1,6 @@
 class RegisterPresenter {
-    constructor(config, view) {
-        this._config = config;
+    constructor(model, view) {
+        this._model = model;
         this._view = view;
     }
 
@@ -10,22 +10,22 @@ class RegisterPresenter {
             this._view.showLoading();
 
             if (!name || !email || !password || !confirmPassword) {
-                throw new Error('All fields must be filled in');
+                throw new Error('Semua field harus diisi');
             }
 
             if (password.length < 8) {
-                throw new Error('Password must be at least 8 characters');
+                throw new Error('Password minimal 8 karakter');
             }
 
             if (password !== confirmPassword) {
-                throw new Error('Password and password confirmation do not match');
+                throw new Error('Password dan konfirmasi password tidak cocok');
             }
 
             console.log('Register validation passed, calling API');
-            await this._config.register(name, email, password);
+            await this._model.register(name, email, password);
 
             console.log('Registration successful');
-            this._view.showAlert('Registration successful. Please login.', 'success');
+            this._view.showAlert('Registrasi berhasil. Silakan login.', 'success');
 
             setTimeout(() => {
                 window.location.href = '#/login';

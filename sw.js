@@ -1,25 +1,25 @@
 importScripts('https://storage.googleapis.com/workbox-cdn/releases/6.5.4/workbox-sw.js');
 
-const CACHE_NAME = 'db-StoryApps';
+const CACHE_NAME = 'dicostory-v1';
 const urlsToCache = [
     './',
     './index.html',
     './manifest.json',
-    './public/icons/favicon-192x192.png',
-    './public/icons/favicon-152x152.png',
-    './public/icons/favicon-96x96.png',
+    './src/public/icons/icon-192x192.png',
+    './src/public/icons/icon-512x512.png',
+    './src/public/icons/badge-96x96.png',
 ];
 
 if (workbox) {
-    console.log('Workbox loaded successfully');
+    console.log('Workbox berhasil dimuat');
 
     workbox.precaching.precacheAndRoute([
         { url: './', revision: '1' },
         { url: './index.html', revision: '1' },
         { url: './manifest.json', revision: '1' },
-        { url: './public/icons/favicon-192x192.png', revision: '1' },
-        { url: './public/icons/favicon-152x152.png', revision: '1' },
-        { url: './public/icons/favicon-96x96.png', revision: '1' },
+        { url: './src/public/icons/icon-192x192.png', revision: '1' },
+        { url: './src/public/icons/icon-512x512.png', revision: '1' },
+        { url: './src/public/icons/badge-96x96.png', revision: '1' },
     ]);
 
     workbox.routing.registerRoute(
@@ -51,6 +51,7 @@ if (workbox) {
         })
     );
 
+    // Cache First Strategy for images
     workbox.routing.registerRoute(
         ({ request }) => request.destination === 'image',
         new workbox.strategies.CacheFirst({
@@ -63,77 +64,98 @@ if (workbox) {
             ],
         })
     );
-
-    workbox.routing.registerRoute(
-        ({ url }) => url.origin === 'https://story-api.dicoding.dev',
-        new workbox.strategies.NetworkFirst({
-            cacheName: 'api-cache',
-            plugins: [
-                new workbox.expiration.ExpirationPlugin({
-                    maxEntries: 100,
-                    maxAgeSeconds: 5 * 60,
-                }),
-                new workbox.cacheableResponse.CacheableResponsePlugin({
-                    statuses: [0, 200],
-                }),
-            ],
-        })
-    );
-
-    workbox.routing.setCatchHandler(({ event }) => {
-        if (event.request.destination === 'document') {
-            return caches.match('./index.html');
-        }
-        return Response.error();
-    });
-
 } else {
-    console.log('Workbox failed to load, using manual cache');
-
+    console.log('Workbox gagal dimuat, menggunakan cache manual');
     self.addEventListener('install', (event) => {
         event.waitUntil(
             caches.open(CACHE_NAME)
-                .then((cache) => cache.addAll(urlsToCache))
+                .then((cache) => {
+                    return cache.addAll(urlsToCache);
+                })
         );
     });
 
     self.addEventListener('fetch', (event) => {
         event.respondWith(
-            caches.match(event.request).then((response) => response || fetch(event.request))
+            caches.match(event.request)
+                .then((response) => {
+                    return response || fetch(event.request);
+                })
         );
     });
 }
 
-self.addEventListener('push', function (event) {
-    let data = {};
+// Push Notification Event
+self.addEventListener('push', (event) => {
+    console.log('Service Worker: Push received');
 
-    try {
-        data = event.data ? event.data.json() : {};
-    } catch (err) {
-        data = { title: 'Notifikasi', body: event.data ? event.data.text() : 'Anda menerima notifikasi.' };
-    }
-
-    const title = data.title || 'Notifikasi Baru';
-    const options = {
-        body: data.body || 'Anda menerima notifikasi.',
-        icon: 'public/icons/favicon-192x192.png',
-        badge: 'public/icons/favicon-72x72.png',
-        data: data.url || '/'
+    let notification = {
+        title: 'StoryApps',
+        options: {
+            body: 'Ada pembaruan baru di StoryApps!',
+            icon: './src/public/icons/favicon-192x192.png',
+            badge: './src/public/icons/favicon-96x96.png',
+            vibrate: [100, 50, 100],
+            data: { url: './' },
+            actions: [
+                {
+                    action: 'open',
+                    title: 'Buka App',
+                    icon: './src/public/icons/favicon-192x192.png',
+                },
+                {
+                    action: 'close',
+                    title: 'Tutup',
+                },
+            ],
+        },
     };
 
+    if (event.data) {
+        try {
+            const dataJson = event.data.json();
+            notification = { ...notification, ...dataJson };
+        } catch (e) {
+            console.error('Error parsing push data:', e);
+        }
+    }
+
     event.waitUntil(
-        self.registration.showNotification(title, options)
+        self.registration.showNotification(notification.title, notification.options)
     );
 });
 
+// Notification Click Event
+self.addEventListener('notificationclick', (event) => {
+    console.log('Service Worker: Notification clicked');
 
-self.addEventListener('notificationclick', function (event) {
     event.notification.close();
+
+    if (event.action === 'close') {
+        return;
+    }
+
+    const urlToOpen = event.notification.data && event.notification.data.url
+        ? event.notification.data.url
+        : './';
+
     event.waitUntil(
-        clients.openWindow(event.notification.data)
+        clients.matchAll({ type: 'window', includeUncontrolled: true })
+            .then((clientList) => {
+                for (const client of clientList) {
+                    if (client.url.includes('index.html') || client.url === urlToOpen) {
+                        return client.focus();
+                    }
+                }
+
+                if (clients.openWindow) {
+                    return clients.openWindow(urlToOpen);
+                }
+            })
     );
 });
 
+// Service Worker Install and Activate
 self.addEventListener('install', (event) => {
     console.log('Service Worker: Installed');
     self.skipWaiting();
@@ -149,7 +171,7 @@ self.addEventListener('activate', (event) => {
                 return Promise.all(
                     cacheNames
                         .filter((cacheName) => {
-                            return cacheName.startsWith('db-StoryApps') && cacheName !== CACHE_NAME;
+                            return cacheName.startsWith('Story-') && cacheName !== CACHE_NAME;
                         })
                         .map((cacheName) => {
                             console.log('Deleting old cache:', cacheName);

@@ -1,7 +1,5 @@
-import { IdbHelper } from '../utils/indexed-db.js';
-
 class FavoriteHelper {
-    static DB_NAME = 'db-storyapps-favorites';
+    static DB_NAME = 'story-favorite-db';
     static DB_VERSION = 1;
     static STORE_NAME = 'favorites';
 

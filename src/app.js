@@ -16,11 +16,13 @@ class App {
 
   async _initializeApp() {
     console.log('Initializing app...');
-
+    
     await this._initIndexedDB();
     await this._initServiceWorker();
     NetworkStatus.init();
     PwaInstaller.init();
+    
+    await this._subscribeToPushNotification();
 
     this._initMobileNav();
     this._checkAuthStatus();
@@ -50,27 +52,26 @@ class App {
   async _initServiceWorker() {
     try {
       console.log('Initializing Service Worker...');
-
+      
       if ('serviceWorker' in navigator) {
-        const registration = await navigator.serviceWorker.register('./sw.js', { scope: './' });
+        const registration = await navigator.serviceWorker.register('./sw.js', {
+          scope: './'
+        });
+        
         console.log('Service Worker registered successfully:', registration);
-
+        
         registration.addEventListener('updatefound', () => {
           console.log('New service worker found, updating...');
         });
 
-        // Cek login dan token
-        const token = localStorage.getItem('token');
-        if (AuthHelper.isLoggedIn() && token) {
+        if (AuthHelper.isLoggedIn()) {
           const permission = await NotificationHelper.requestPermission();
-
-          if (permission) {
+          
+          if (permission && registration) {
             await NotificationHelper.subscribePushNotification(registration);
           }
-        } else {
-          console.log('User not logged in or token not available, skipping push subscription');
         }
-
+        
         return registration;
       } else {
         console.warn('Service Worker not supported');
@@ -81,7 +82,6 @@ class App {
       return null;
     }
   }
-
 
   async _initIndexedDB() {
     try {
@@ -95,12 +95,12 @@ class App {
   _initMobileNav() {
     const menuButton = document.getElementById('menu');
     const drawer = document.getElementById('drawer');
-
+    
     if (!menuButton || !drawer) {
       console.error('Menu button or drawer not found');
       return;
     }
-
+    
     menuButton.addEventListener('click', (event) => {
       event.stopPropagation();
       drawer.classList.toggle('open');
@@ -140,19 +140,18 @@ class App {
       loginMenuItem.classList.add('hidden');
       registerMenuItem.classList.add('hidden');
       logoutMenuItem.classList.remove('hidden');
-
+      
       if (favoritesMenuItem) favoritesMenuItem.classList.remove('hidden');
       if (addStoryMenuItem) addStoryMenuItem.classList.remove('hidden');
       if (mapMenuItem) mapMenuItem.classList.remove('hidden');
-
-      // Setelah login, coba subscribe ke push notification
+      
       this._subscribeToPushNotification();
     } else {
       console.log('User is not logged in');
       loginMenuItem.classList.remove('hidden');
       registerMenuItem.classList.remove('hidden');
       logoutMenuItem.classList.add('hidden');
-
+      
       if (favoritesMenuItem) favoritesMenuItem.classList.add('hidden');
       if (addStoryMenuItem) addStoryMenuItem.classList.add('hidden');
       if (mapMenuItem) mapMenuItem.classList.add('hidden');
@@ -168,15 +167,9 @@ class App {
     try {
       if ('serviceWorker' in navigator) {
         const registration = await navigator.serviceWorker.ready;
-        const token = localStorage.getItem('token');
-        if (!token) {
-          console.log('User belum login, tidak bisa subscribe push notification');
-          return;
-        }
-
         const permission = await NotificationHelper.requestPermission();
-
-        if (permission) {
+        
+        if (permission && registration) {
           await NotificationHelper.subscribePushNotification(registration);
         }
       }
@@ -187,15 +180,8 @@ class App {
 
   async _handleLogout() {
     this._cleanupCurrentPage();
-
+    
     AuthHelper.logout();
-    localStorage.removeItem('token');
-
-    IdbHelper.clearStories().then(() => {
-      console.log('Stories cleared from IndexedDB after logout');
-    }).catch((error) => {
-      console.error('Error clearing stories from IndexedDB:', error);
-    });
 
     try {
       await IdbHelper.clearStories();
@@ -203,7 +189,7 @@ class App {
     } catch (error) {
       console.error('Error clearing stories from IndexedDB:', error);
     }
-
+    
     window.location.href = '#/';
     window.location.reload();
   }
@@ -220,28 +206,26 @@ class App {
     console.log('Handling route...');
 
     this._cleanupCurrentPage();
-
+    
     const urlParts = window.location.hash.slice(1).split('/');
     if (urlParts.length > 2 && urlParts[1] === 'detail') {
       window.selectedStoryId = urlParts[2];
       window.history.replaceState(null, null, '#/detail');
     }
-
+    
     const url = UrlParser.parseActiveUrlWithCombiner();
     console.log('Current URL:', url);
     let page;
-
-    // Check if route exists
+    
     if (routes[url]) {
       page = routes[url];
     } else {
-      // If not, use the NotFoundPage
       console.log('Route not found, redirecting to 404 page');
       page = routes['/404'];
     }
-
+    
     console.log('Page to render:', page);
-
+    
     try {
       if (url === '/login' || url === '/register') {
         if (AuthHelper.isLoggedIn()) {
@@ -258,12 +242,12 @@ class App {
       }
 
       const contentContainer = document.querySelector('#content');
-
+      
       if (!contentContainer) {
         console.error('Content container not found');
         return;
       }
-
+      
       contentContainer.innerHTML = '';
 
       this._currentPage = new page.view();
@@ -276,46 +260,11 @@ class App {
       console.log('afterRender completed');
 
       document.getElementById('main-content').focus();
-
+      
     } catch (error) {
       console.error('Error rendering page:', error);
     }
   }
-}
-
-async function subscribeUserToPush() {
-  if (!('serviceWorker' in navigator)) {
-    console.warn('Service Worker tidak didukung browser ini');
-    return;
-  }
-
-  const registration = await navigator.serviceWorker.ready;
-
-  try {
-    const subscription = await registration.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: _urlBase64ToUint8Array('BCCs2eonMI-6H2ctvFaWg-UYdDv387Vno_bzUzALpB442r2lCnsHmtrx8biyPi_E-1fSGABK_Qs_GlvPoJJqxbk')
-    });
-
-    await fetch('/api/save-subscription', {
-      method: 'POST',
-      body: JSON.stringify(subscription),
-      headers: { 'Content-Type': 'application/json' }
-    });
-
-    console.log('Berhasil subscribe ke push:', subscription);
-  } catch (err) {
-    console.error('Gagal subscribe ke push', err);
-  }
-}
-
-async function initPushNotification() {
-  const permission = await Notification.requestPermission();
-  if (permission !== 'granted') {
-    console.warn('Izin notifikasi ditolak');
-    return;
-  }
-  await subscribeUserToPush();
 }
 
 document.addEventListener('DOMContentLoaded', () => {

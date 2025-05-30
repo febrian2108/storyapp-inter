@@ -102,7 +102,7 @@ class FavoritesPage {
             alt="Cerita dari ${story.name}"
             class="story-image"
             loading="lazy"
-            onerror="this.src='./src/public/fallback.jpg';"
+            onerror="this.src='./src/public/favicon.png';"
           />
         </div>
         <div class="story-content">
