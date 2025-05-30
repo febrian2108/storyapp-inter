@@ -3,7 +3,7 @@ import { AuthHelper } from '../../utils/auth-helper.js';
 
 class FavoritesPage {
   constructor() {
-    this._title = 'Cerita Favorit - StoryApps';
+    this._title = 'Cerita Favorit - Story App';
   }
 
   async render() {
@@ -102,7 +102,7 @@ class FavoritesPage {
             alt="Cerita dari ${story.name}"
             class="story-image"
             loading="lazy"
-            onerror="this.src='./src/public/favicon.png';"
+            onerror="this.src='./src/public/fallback.jpg';"
           />
         </div>
         <div class="story-content">
@@ -163,12 +163,13 @@ class FavoritesPage {
             this.renderFavorites([]);
           }
 
+          // Tampilkan notifikasi penghapusan favorit
           if ('Notification' in window && Notification.permission === 'granted') {
             navigator.serviceWorker.ready.then((registration) => {
               registration.showNotification('StoryApps', {
                 body: 'Cerita berhasil dihapus dari favorit',
-                icon: './src/public/icons/icon-192x192.png',
-                badge: './src/public/icons/badge-96x96.png',
+                icon: './src/public/icons/favicon-192x192.png',
+                badge: './src/public/icons/favicon-96x96.png',
                 vibrate: [100, 50, 100]
               });
             });
