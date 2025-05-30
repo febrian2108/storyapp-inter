@@ -37,7 +37,25 @@ class NotificationHelper {
 
     static async getVapidPublicKey() {
         try {
-            const response = await fetch('https://story-api.dicoding.dev/v1/stories/vapidPublicKey');
+            const token = localStorage.getItem('token');
+            console.log('Token saat getVapidPublicKey:', token);
+
+            if (!token) {
+                throw new Error('User not authenticated: no token found in localStorage');
+            }
+
+            const response = await fetch('https://story-api.dicoding.dev/v1/stories/vapidPublicKey', {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/json',
+                },
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`HTTP ${response.status}: ${errorText}`);
+            }
+
             const responseJson = await response.json();
 
             if (responseJson.error) {
@@ -96,6 +114,11 @@ class NotificationHelper {
                 }),
             });
 
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`HTTP ${response.status}: ${errorText}`);
+            }
+
             const responseJson = await response.json();
 
             if (responseJson.error) {
@@ -124,7 +147,6 @@ class NotificationHelper {
     }
 }
 
-// Utility function to convert base64 public key to Uint8Array (needed by Push API)
 function urlBase64ToUint8Array(base64String) {
     const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
     const base64 = (base64String + padding)

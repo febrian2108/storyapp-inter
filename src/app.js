@@ -59,13 +59,18 @@ class App {
           console.log('New service worker found, updating...');
         });
 
-        if (AuthHelper.isLoggedIn()) {
+        // Cek login dan token
+        const token = localStorage.getItem('token');
+        if (AuthHelper.isLoggedIn() && token) {
           const permission = await NotificationHelper.requestPermission();
 
           if (permission) {
             await NotificationHelper.subscribePushNotification(registration);
           }
+        } else {
+          console.log('User not logged in or token not available, skipping push subscription');
         }
+
         return registration;
       } else {
         console.warn('Service Worker not supported');
@@ -76,6 +81,7 @@ class App {
       return null;
     }
   }
+
 
   async _initIndexedDB() {
     try {
@@ -162,6 +168,12 @@ class App {
     try {
       if ('serviceWorker' in navigator) {
         const registration = await navigator.serviceWorker.ready;
+        const token = localStorage.getItem('token');
+        if (!token) {
+          console.log('User belum login, tidak bisa subscribe push notification');
+          return;
+        }
+
         const permission = await NotificationHelper.requestPermission();
 
         if (permission) {
@@ -177,6 +189,13 @@ class App {
     this._cleanupCurrentPage();
 
     AuthHelper.logout();
+    localStorage.removeItem('token');
+
+    IdbHelper.clearStories().then(() => {
+      console.log('Stories cleared from IndexedDB after logout');
+    }).catch((error) => {
+      console.error('Error clearing stories from IndexedDB:', error);
+    });
 
     try {
       await IdbHelper.clearStories();

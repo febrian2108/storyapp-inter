@@ -1,9 +1,9 @@
 class FavoriteHelper {
-    static DB_NAME = 'db-storyapps';
+    static DB_NAME = 'db-storyapps-favorite';
     static DB_VERSION = 1;
     static STORE_NAME = 'favorites';
 
-    static async openDB() {
+    static openDB() {
         return new Promise((resolve, reject) => {
             if (!('indexedDB' in window)) {
                 reject(new Error('Browser does not support IndexedDB'));
@@ -22,7 +22,6 @@ class FavoriteHelper {
 
             request.onupgradeneeded = (event) => {
                 const db = event.target.result;
-
                 if (!db.objectStoreNames.contains(this.STORE_NAME)) {
                     db.createObjectStore(this.STORE_NAME, { keyPath: 'id' });
                     console.log(`Object store ${this.STORE_NAME} created successfully`);
@@ -31,77 +30,89 @@ class FavoriteHelper {
         });
     }
 
-    static async addToFavorites(story) {
-        const db = await this.openDB();
-        const tx = db.transaction(this.STORE_NAME, 'readwrite');
-        const store = tx.objectStore(this.STORE_NAME);
+    static addToFavorites(story) {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const db = await this.openDB();
+                const tx = db.transaction(this.STORE_NAME, 'readwrite');
+                const store = tx.objectStore(this.STORE_NAME);
+                const request = store.put(story);
 
-        return new Promise((resolve, reject) => {
-            const request = store.put(story);
+                request.onsuccess = () => {
+                    resolve(true);
+                    console.log(`Story successfully added to favorites`);
+                };
 
-            request.onsuccess = () => {
-                resolve(true);
-                console.log(`Story successfully added to favorites`);
-            };
-
-            request.onerror = () => {
-                reject(new Error('Failed to add story to favorites'));
-            };
+                request.onerror = () => {
+                    reject(new Error('Failed to add story to favorites'));
+                };
+            } catch (error) {
+                reject(error);
+            }
         });
     }
 
-    static async removeFromFavorites(id) {
-        const db = await this.openDB();
-        const tx = db.transaction(this.STORE_NAME, 'readwrite');
-        const store = tx.objectStore(this.STORE_NAME);
+    static removeFromFavorites(id) {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const db = await this.openDB();
+                const tx = db.transaction(this.STORE_NAME, 'readwrite');
+                const store = tx.objectStore(this.STORE_NAME);
+                const request = store.delete(id);
 
-        return new Promise((resolve, reject) => {
-            const request = store.delete(id);
+                request.onsuccess = () => {
+                    resolve(true);
+                    console.log(`Story successfully removed from favorites`);
+                };
 
-            request.onsuccess = () => {
-                resolve(true);
-                console.log(`Story successfully removed from favorites`);
-            };
-
-            request.onerror = () => {
-                reject(new Error('Failed to delete story from favorites'));
-            };
+                request.onerror = () => {
+                    reject(new Error('Failed to delete story from favorites'));
+                };
+            } catch (error) {
+                reject(error);
+            }
         });
     }
 
-    static async getFavorites() {
-        const db = await this.openDB();
-        const tx = db.transaction(this.STORE_NAME, 'readonly');
-        const store = tx.objectStore(this.STORE_NAME);
+    static getFavorites() {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const db = await this.openDB();
+                const tx = db.transaction(this.STORE_NAME, 'readonly');
+                const store = tx.objectStore(this.STORE_NAME);
+                const request = store.getAll();
 
-        return new Promise((resolve, reject) => {
-            const request = store.getAll();
+                request.onsuccess = () => {
+                    resolve(request.result);
+                };
 
-            request.onsuccess = () => {
-                resolve(request.result);
-            };
-
-            request.onerror = () => {
-                reject(new Error('Failed to fetch favorites list'));
-            };
+                request.onerror = () => {
+                    reject(new Error('Failed to fetch favorites list'));
+                };
+            } catch (error) {
+                reject(error);
+            }
         });
     }
 
-    static async isFavorite(id) {
-        const db = await this.openDB();
-        const tx = db.transaction(this.STORE_NAME, 'readonly');
-        const store = tx.objectStore(this.STORE_NAME);
+    static isFavorite(id) {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const db = await this.openDB();
+                const tx = db.transaction(this.STORE_NAME, 'readonly');
+                const store = tx.objectStore(this.STORE_NAME);
+                const request = store.get(id);
 
-        return new Promise((resolve, reject) => {
-            const request = store.get(id);
+                request.onsuccess = () => {
+                    resolve(!!request.result);
+                };
 
-            request.onsuccess = () => {
-                resolve(!!request.result);
-            };
-
-            request.onerror = () => {
-                reject(new Error('Failed to check favorite status'));
-            };
+                request.onerror = () => {
+                    reject(new Error('Failed to check favorite status'));
+                };
+            } catch (error) {
+                reject(error);
+            }
         });
     }
 }

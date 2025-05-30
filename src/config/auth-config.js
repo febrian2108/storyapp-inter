@@ -5,26 +5,22 @@ class AuthConfig {
 
     async login(email, password) {
         try {
-            console.log('Trying to login with:', email);
-            const response = await fetch(`${this._baseUrl}/login`, {
+            const response = await fetch('https://story-api.dicoding.dev/v1/login', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ email, password }),
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password }),
             });
+            const data = await response.json();
 
-            const responseJson = await response.json();
-
-            if (responseJson.error) {
-                throw new Error(responseJson.message);
+            if (data.token) {
+                localStorage.setItem('token', data.token); // Token disimpan di sini
+                return true;
+            } else {
+                throw new Error('Login gagal: token tidak ditemukan');
             }
-
-            console.log('Login successful:', responseJson);
-            return responseJson.loginResult;
         } catch (error) {
             console.error('Login error:', error);
-            throw new Error(error.message || 'Failed to log in');
+            return false;
         }
     }
 
