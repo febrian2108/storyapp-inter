@@ -33,7 +33,7 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.png', 'icons/*.png'], // sesuaikan asset yang ingin dimasukkan
       manifest: {
-        name: 'Your App Name',
+        name: 'Story App',
         short_name: 'App',
         description: 'Your app description',
         theme_color: '#ffffff',
@@ -58,8 +58,8 @@ export default defineConfig({
     {
       name: 'copy-pwa-files',
       writeBundle() {
-        console.log('✅ PWA files should be copied to dist folder');
-        console.log('📁 Make sure sw.js and manifest.json are in public/ folder');
+        console.log('PWA files should be copied to dist folder');
+        console.log('Make sure sw.js and manifest.json are in public/ folder');
       },
     },
   ],

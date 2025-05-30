@@ -1,6 +1,6 @@
 importScripts('https://storage.googleapis.com/workbox-cdn/releases/6.5.4/workbox-sw.js');
 
-const CACHE_NAME = 'dicostory-v1';
+const CACHE_NAME = 'storyapps-v1';
 const urlsToCache = [
     './',
     './index.html',

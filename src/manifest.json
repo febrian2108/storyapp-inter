@@ -1,5 +1,5 @@
 {
-    "name": "Story Apps",
+    "name": "StoryApps",
     "short_name": "Stories",
     "description": "Aplikasi untuk melihat cerita",
     "start_url": "./index.html",
@@ -42,32 +42,6 @@
             "sizes": "192x192",
             "type": "image/png",
             "purpose": "any"
-        }
-    ],
-    "shortcuts": [
-        {
-            "name": "Add New Story",
-            "short_name": "Add Story",
-            "description": "Share your interesting stories",
-            "url": "./index.html#/add",
-            "icons": [
-                {
-                    "src": "./src/public/icons/favicon-96x96.png",
-                    "sizes": "96x96"
-                }
-            ]
-        },
-        {
-            "name": "View Favorites",
-            "short_name": "Favorit",
-            "description": "View your favorite stories",
-            "url": "./index.html#/favorites",
-            "icons": [
-                {
-                    "src": "./src/public/icons/favorite-icon-96x96.png",
-                    "sizes": "96x96"
-                }
-            ]
         }
     ]
 }

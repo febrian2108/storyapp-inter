@@ -163,10 +163,9 @@ class FavoritesPage {
             this.renderFavorites([]);
           }
 
-          // Tampilkan notifikasi penghapusan favorit
           if ('Notification' in window && Notification.permission === 'granted') {
             navigator.serviceWorker.ready.then((registration) => {
-              registration.showNotification('DicoStory', {
+              registration.showNotification('StoryApps', {
                 body: 'Cerita berhasil dihapus dari favorit',
                 icon: './src/public/icons/icon-192x192.png',
                 badge: './src/public/icons/badge-96x96.png',

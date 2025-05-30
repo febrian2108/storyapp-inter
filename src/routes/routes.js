@@ -4,7 +4,6 @@ import { MapPage } from '../views/pages/map-pages.js';
 import { DetailPage } from '../views/pages/detail-pages.js';
 import { LoginPage } from '../views/pages/login-pages.js';
 import { RegisterPage } from '../views/pages/register-pages.js';
-import { NotFoundPage } from '../views/pages/not-found.js';
 import { FavoritesPage } from '../views/pages/save-pages.js';
 
 const routes = {
@@ -28,9 +27,6 @@ const routes = {
   },
   '/favorites': {
     view: FavoritesPage,
-  },
-  '/404': {
-    view: NotFoundPage,
   }
 };
 
