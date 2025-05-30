@@ -1,5 +1,5 @@
 class FavoriteHelper {
-    static DB_NAME = 'db-storyapps-favorite';
+    static DB_NAME = 'db-storyapps';
     static DB_VERSION = 1;
     static STORE_NAME = 'favorites';
 

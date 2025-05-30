@@ -59,7 +59,7 @@ class NotificationHelper {
             return null;
         }
 
-        const convertedVapidKey = this._urlBase64ToUint8Array(vapidPublicKey);
+        const convertedVapidKey = urlBase64ToUint8Array(vapidPublicKey);
 
         try {
             const subscription = await registration.pushManager.subscribe({
@@ -108,22 +108,6 @@ class NotificationHelper {
         }
     }
 
-    static _urlBase64ToUint8Array(base64String) {
-        const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
-        const base64 = (base64String + padding)
-            .replace(/-/g, '+')
-            .replace(/_/g, '/');
-
-        const rawData = window.atob(base64);
-        const outputArray = new Uint8Array(rawData.length);
-
-        for (let i = 0; i < rawData.length; i++) {
-            outputArray[i] = rawData.charCodeAt(i);
-        }
-
-        return outputArray;
-    }
-
     static showNotification(title, options) {
         if (!('Notification' in window)) {
             console.log('The browser does not support notifications');
@@ -140,4 +124,20 @@ class NotificationHelper {
     }
 }
 
-export { NotificationHelper };
+// Utility function to convert base64 public key to Uint8Array (needed by Push API)
+function urlBase64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+    const base64 = (base64String + padding)
+        .replace(/-/g, '+')
+        .replace(/_/g, '/');
+
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+
+    for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+}
+
+export { NotificationHelper, urlBase64ToUint8Array };

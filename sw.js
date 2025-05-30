@@ -5,9 +5,9 @@ const urlsToCache = [
     './',
     './index.html',
     './manifest.json',
-    './src/public/icons/favicon-192x192.png',
-    './src/public/icons/favicon-152x152.png',
-    './src/public/icons/favicon-96x96.png',
+    './public/icons/favicon-192x192.png',
+    './public/icons/favicon-152x152.png',
+    './public/icons/favicon-96x96.png',
 ];
 
 if (workbox) {
@@ -17,9 +17,9 @@ if (workbox) {
         { url: './', revision: '1' },
         { url: './index.html', revision: '1' },
         { url: './manifest.json', revision: '1' },
-        { url: './src/public/icons/favicon-192x192.png', revision: '1' },
-        { url: './src/public/icons/favicon-152x152.png', revision: '1' },
-        { url: './src/public/icons/favicon-96x96.png', revision: '1' },
+        { url: './public/icons/favicon-192x192.png', revision: '1' },
+        { url: './public/icons/favicon-152x152.png', revision: '1' },
+        { url: './public/icons/favicon-96x96.png', revision: '1' },
     ]);
 
     workbox.routing.registerRoute(
@@ -93,86 +93,44 @@ if (workbox) {
     self.addEventListener('install', (event) => {
         event.waitUntil(
             caches.open(CACHE_NAME)
-                .then((cache) => {
-                    return cache.addAll(urlsToCache);
-                })
+                .then((cache) => cache.addAll(urlsToCache))
         );
     });
 
     self.addEventListener('fetch', (event) => {
         event.respondWith(
-            caches.match(event.request)
-                .then((response) => {
-                    return response || fetch(event.request);
-                })
+            caches.match(event.request).then((response) => response || fetch(event.request))
         );
     });
 }
 
-self.addEventListener('push', (event) => {
-    console.log('Service Worker: Push received');
+self.addEventListener('push', function (event) {
+    let data = {};
 
-    let notification = {
-        title: 'StoryApps Update',
-        options: {
-            body: 'There is a new update in StoryApps!',
-            icon: './icons/favicon-192x192.png',
-            badge: './icons/favicon-96x96.png',
-            vibrate: [100, 50, 100],
-            data: { url: './' },
-            actions: [
-                {
-                    action: 'open',
-                    title: 'Open App',
-                    icon: './icons/favicon-192x192.png'
-                },
-                {
-                    action: 'close',
-                    title: 'Close',
-                }
-            ]
-        }
-    };
-
-    if (event.data) {
-        try {
-            const dataJson = event.data.json();
-            notification = { ...notification, ...dataJson };
-        } catch (e) {
-            console.error('Error parsing push data:', e);
-        }
+    try {
+        data = event.data ? event.data.json() : {};
+    } catch (err) {
+        data = { title: 'Notifikasi', body: event.data ? event.data.text() : 'Anda menerima notifikasi.' };
     }
 
+    const title = data.title || 'Notifikasi Baru';
+    const options = {
+        body: data.body || 'Anda menerima notifikasi.',
+        icon: 'public/icons/favicon-192x192.png',
+        badge: 'public/icons/favicon-72x72.png',
+        data: data.url || '/'
+    };
+
     event.waitUntil(
-        self.registration.showNotification(notification.title, notification.options)
+        self.registration.showNotification(title, options)
     );
 });
 
-self.addEventListener('notificationclick', (event) => {
-    console.log('Service Worker: Notification clicked');
 
+self.addEventListener('notificationclick', function (event) {
     event.notification.close();
-
-    if (event.action === 'close') {
-        return;
-    }
-
-    const urlToOpen = event.notification.data && event.notification.data.url
-        ? event.notification.data.url
-        : './';
-
     event.waitUntil(
-        clients.matchAll({ type: 'window', includeUncontrolled: true })
-            .then((clientList) => {
-                for (const client of clientList) {
-                    if (client.url.includes('index.html') || client.url === urlToOpen) {
-                        return client.focus();
-                    }
-                }
-                if (clients.openWindow) {
-                    return clients.openWindow(urlToOpen);
-                }
-            })
+        clients.openWindow(event.notification.data)
     );
 });
 
@@ -191,7 +149,7 @@ self.addEventListener('activate', (event) => {
                 return Promise.all(
                     cacheNames
                         .filter((cacheName) => {
-                            return cacheName.startsWith('StoryApps-') && cacheName !== CACHE_NAME;
+                            return cacheName.startsWith('db-StoryApps') && cacheName !== CACHE_NAME;
                         })
                         .map((cacheName) => {
                             console.log('Deleting old cache:', cacheName);
