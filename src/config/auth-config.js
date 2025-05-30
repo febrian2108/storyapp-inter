@@ -5,22 +5,26 @@ class AuthConfig {
 
     async login(email, password) {
         try {
-            const response = await fetch('https://story-api.dicoding.dev/v1/login', {
+            console.log('Trying to login with:', email);
+            const response = await fetch(`${this._baseUrl}/login`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password }),
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email, password }),
             });
-            const data = await response.json();
 
-            if (data.token) {
-                localStorage.setItem('token', data.token); // Token disimpan di sini
-                return true;
-            } else {
-                throw new Error('Login gagal: token tidak ditemukan');
+            const responseJson = await response.json();
+
+            if (responseJson.error) {
+                throw new Error(responseJson.message);
             }
+
+            console.log('Login successful:', responseJson);
+            return responseJson.loginResult;
         } catch (error) {
             console.error('Login error:', error);
-            return false;
+            throw new Error(error.message || 'Failed to log in');
         }
     }
 
@@ -54,7 +58,7 @@ class AuthConfig {
             const token = localStorage.getItem('token');
 
             if (!token) {
-                throw new Error('You must login first');
+                throw new Error('You are not logged in yet');
             }
 
             const response = await fetch(`${this._baseUrl}/notifications/subscribe`, {
@@ -75,7 +79,7 @@ class AuthConfig {
             return responseJson;
         } catch (error) {
             console.error('Notification subscription error:', error);
-            throw new Error(error.message || 'Failed to subscribe');
+            throw new Error(error.message || 'Failed to subscribe to notifications');
         }
     }
 
@@ -84,7 +88,7 @@ class AuthConfig {
             const token = localStorage.getItem('token');
 
             if (!token) {
-                throw new Error('You must login first');
+                throw new Error('You are not logged in yet');
             }
 
             const response = await fetch(`${this._baseUrl}/notifications/subscribe`, {

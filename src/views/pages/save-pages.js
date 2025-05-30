@@ -1,4 +1,4 @@
-import { FavoriteHelper } from '../../utils/favorite-helper.js';  // Sesuaikan path jika perlu
+import { IdbHelper } from '../../utils/indexed-db.js';
 import { AuthHelper } from '../../utils/auth-helper.js';
 
 class FavoritesPage {
@@ -14,10 +14,11 @@ class FavoritesPage {
         <div class="coordinator-layout">
           <div class="coordinator-header">
             <div>
-              <h2 class="coordinator-title">Saved favorite stories</h2>
+              <h2 class="coordinator-title">Cerita Favorit</h2>
+              <p>Kumpulan cerita yang Anda tandai sebagai favorit</p>
             </div>
             <a href="#/" class="btn btn-secondary">
-              <i class="fas fa-arrow-left"></i> Back to Home
+              <i class="fas fa-arrow-left"></i> Kembali ke Beranda
             </a>
           </div>
           
@@ -36,11 +37,11 @@ class FavoritesPage {
       window.location.href = '#/login';
       return;
     }
-
+    
     this.showLoading();
-
+    
     try {
-      const favorites = await FavoriteHelper.getFavorites();
+      const favorites = await IdbHelper.getFavorites();
       this.renderFavorites(favorites);
     } catch (error) {
       console.error('Error loading favorites:', error);
@@ -53,7 +54,7 @@ class FavoritesPage {
     if (loader) {
       loader.classList.remove('hidden');
     }
-
+    
     const errorContainer = document.getElementById('error-container');
     if (errorContainer) {
       errorContainer.classList.add('hidden');
@@ -69,13 +70,13 @@ class FavoritesPage {
 
   async renderFavorites(favorites) {
     this.hideLoading();
-
+    
     const favoritesContainer = document.getElementById('favorites-container');
     if (!favoritesContainer) {
       console.error('Favorites container not found');
       return;
     }
-
+    
     if (!favorites || favorites.length === 0) {
       favoritesContainer.innerHTML = `
         <div class="empty-state">
@@ -85,15 +86,15 @@ class FavoritesPage {
       `;
       return;
     }
-
+    
     favoritesContainer.innerHTML = '';
-
+    
     favorites.forEach((story) => {
-      const initial = story.name ? story.name.charAt(0).toUpperCase() : '';
-
+      const initial = story.name.charAt(0).toUpperCase();
+      
       const storyItemElement = document.createElement('article');
       storyItemElement.classList.add('story-card');
-
+      
       storyItemElement.innerHTML = `
         <div class="story-image-container">
           <img
@@ -101,7 +102,7 @@ class FavoritesPage {
             alt="Cerita dari ${story.name}"
             class="story-image"
             loading="lazy"
-            onerror="this.src='./src/public/favicon.png';"
+            onerror="this.src='./src/public/fallback.jpg';"
           />
         </div>
         <div class="story-content">
@@ -119,12 +120,12 @@ class FavoritesPage {
               <span>${this._formatDate(story.createdAt)}</span>
             </div>
             
-            ${story.lat && story.lon ? `
-              <div class="story-info">
+            ${story.lat && story.lon ? 
+              `<div class="story-info">
                 <i class="fas fa-map-marker-alt"></i>
-                <span>Location available</span>
+                <span>Lokasi tersedia</span>
               </div>` : ''
-        }
+            }
           </div>
           
           <div class="story-actions">
@@ -137,40 +138,39 @@ class FavoritesPage {
           </div>
         </div>
       `;
-
+      
       favoritesContainer.appendChild(storyItemElement);
-
-      // Event listener tombol view detail
+      
+      // Setup event listeners
       const viewDetailBtn = storyItemElement.querySelector('.view-details-btn');
       viewDetailBtn.addEventListener('click', (event) => {
         event.preventDefault();
         window.selectedStoryId = story.id;
         window.location.href = '#/detail';
       });
-
-      // Event listener tombol hapus favorit
+      
       const favoriteBtn = storyItemElement.querySelector('.favorite-btn');
       favoriteBtn.addEventListener('click', async (event) => {
         event.preventDefault();
-
+        
         try {
           await IdbHelper.removeFromFavorites(story.id);
           storyItemElement.remove();
-
-          // Refresh daftar favorit jika kosong
+          
+          // Check if there are any favorites left
           const remainingFavorites = await IdbHelper.getFavorites();
           if (remainingFavorites.length === 0) {
             this.renderFavorites([]);
           }
 
-          // Tampilkan notifikasi penghapusan favorit jika diizinkan
+          // Tampilkan notifikasi penghapusan favorit
           if ('Notification' in window && Notification.permission === 'granted') {
             navigator.serviceWorker.ready.then((registration) => {
-              registration.showNotification('StoryApps', {
-                body: 'Story successfully removed from favorites',
+              registration.showNotification('DicoStory', {
+                body: 'Cerita berhasil dihapus dari favorit',
                 icon: './src/public/icons/icon-192x192.png',
                 badge: './src/public/icons/badge-96x96.png',
-                vibrate: [100, 50, 100],
+                vibrate: [100, 50, 100]
               });
             });
           }
@@ -183,23 +183,23 @@ class FavoritesPage {
 
   showError(message) {
     this.hideLoading();
-
+    
     const errorContainer = document.getElementById('error-container');
     if (!errorContainer) {
       console.error('Error container not found');
       return;
     }
-
+    
     errorContainer.classList.remove('hidden');
     errorContainer.innerHTML = `
       <div class="error-content">
         <i class="fas fa-exclamation-triangle fa-3x"></i>
-        <h3>Failed to load favorite story</h3>
+        <h3>Gagal memuat cerita favorit</h3>
         <p>${message}</p>
-        <button id="retry-button" class="btn">Try Again</button>
+        <button id="retry-button" class="btn">Coba Lagi</button>
       </div>
     `;
-
+    
     const retryButton = document.getElementById('retry-button');
     if (retryButton) {
       retryButton.addEventListener('click', async () => {
@@ -209,7 +209,7 @@ class FavoritesPage {
           this.renderFavorites(favorites);
         } catch (error) {
           console.error('Error reloading favorites:', error);
-          this.showError('Failed to load favorite story: ' + error.message);
+          this.showError('Gagal memuat cerita favorit: ' + error.message);
         }
       });
     }
@@ -225,15 +225,15 @@ class FavoritesPage {
 
   _formatDate(dateString) {
     if (!dateString) return '-';
-    const options = {
-      year: 'numeric',
-      month: 'long',
+    const options = { 
+      year: 'numeric', 
+      month: 'long', 
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit',
+      minute: '2-digit'
     };
     return new Date(dateString).toLocaleDateString('id-ID', options);
   }
 }
 
-export { FavoritesPage };
+export { FavoritesPage }

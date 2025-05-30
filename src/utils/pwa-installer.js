@@ -7,7 +7,6 @@ class PwaInstaller {
   static _setupEventListeners() {
     window.addEventListener('beforeinstallprompt', (event) => {
       event.preventDefault();
-      
       this.deferredPrompt = event;
 
       this._showInstallBanner();
@@ -18,8 +17,8 @@ class PwaInstaller {
       const closeBannerButton = document.getElementById('close-banner');
       
       if (installButton) {
-        installButton.addEventListener('click', () => {
-          this._installPwa();
+        installButton.addEventListener('click', function() {
+          window.location.href = 'https://dicostory.netlify.app';
         });
       }
       
@@ -32,7 +31,6 @@ class PwaInstaller {
 
     window.addEventListener('appinstalled', () => {
       this._hideInstallBanner();
-      
       this.deferredPrompt = null;
 
       console.log('PWA was installed');
@@ -41,7 +39,6 @@ class PwaInstaller {
 
   static _showInstallBanner() {
     const banner = document.getElementById('pwa-install-banner');
-    
     if (banner && this.deferredPrompt) {
       banner.classList.add('show');
     }
@@ -49,7 +46,6 @@ class PwaInstaller {
 
   static _hideInstallBanner() {
     const banner = document.getElementById('pwa-install-banner');
-    
     if (banner) {
       banner.classList.remove('show');
     }
@@ -59,19 +55,18 @@ class PwaInstaller {
     if (!this.deferredPrompt) {
       return;
     }
-    
+
     this.deferredPrompt.prompt();
 
     const choiceResult = await this.deferredPrompt.userChoice;
-    
     this.deferredPrompt = null;
-    
+
     if (choiceResult.outcome === 'accepted') {
       console.log('User accepted the install prompt');
     } else {
       console.log('User dismissed the install prompt');
     }
-    
+
     this._hideInstallBanner();
   }
 }

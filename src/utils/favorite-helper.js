@@ -1,19 +1,21 @@
+import { IdbHelper } from '../utils/indexed-db.js';
+
 class FavoriteHelper {
-    static DB_NAME = 'db-storyapps-favorite';
+    static DB_NAME = 'db-storyapps-favorites';
     static DB_VERSION = 1;
     static STORE_NAME = 'favorites';
 
-    static openDB() {
+    static async openDB() {
         return new Promise((resolve, reject) => {
             if (!('indexedDB' in window)) {
-                reject(new Error('Browser does not support IndexedDB'));
+                reject(new Error('Browser tidak mendukung IndexedDB'));
                 return;
             }
 
             const request = indexedDB.open(this.DB_NAME, this.DB_VERSION);
 
             request.onerror = () => {
-                reject(new Error('Failed to open favorites database'));
+                reject(new Error('Gagal membuka database favorites'));
             };
 
             request.onsuccess = () => {
@@ -22,97 +24,86 @@ class FavoriteHelper {
 
             request.onupgradeneeded = (event) => {
                 const db = event.target.result;
+
                 if (!db.objectStoreNames.contains(this.STORE_NAME)) {
                     db.createObjectStore(this.STORE_NAME, { keyPath: 'id' });
-                    console.log(`Object store ${this.STORE_NAME} created successfully`);
+                    console.log(`Object store ${this.STORE_NAME} berhasil dibuat`);
                 }
             };
         });
     }
 
-    static addToFavorites(story) {
-        return new Promise(async (resolve, reject) => {
-            try {
-                const db = await this.openDB();
-                const tx = db.transaction(this.STORE_NAME, 'readwrite');
-                const store = tx.objectStore(this.STORE_NAME);
-                const request = store.put(story);
+    static async addToFavorites(story) {
+        const db = await this.openDB();
+        const tx = db.transaction(this.STORE_NAME, 'readwrite');
+        const store = tx.objectStore(this.STORE_NAME);
 
-                request.onsuccess = () => {
-                    resolve(true);
-                    console.log(`Story successfully added to favorites`);
-                };
+        return new Promise((resolve, reject) => {
+            const request = store.put(story);
 
-                request.onerror = () => {
-                    reject(new Error('Failed to add story to favorites'));
-                };
-            } catch (error) {
-                reject(error);
-            }
+            request.onsuccess = () => {
+                resolve(true);
+                console.log(`Story berhasil ditambahkan ke favorit`);
+            };
+
+            request.onerror = () => {
+                reject(new Error('Gagal menambahkan story ke favorit'));
+            };
         });
     }
 
-    static removeFromFavorites(id) {
-        return new Promise(async (resolve, reject) => {
-            try {
-                const db = await this.openDB();
-                const tx = db.transaction(this.STORE_NAME, 'readwrite');
-                const store = tx.objectStore(this.STORE_NAME);
-                const request = store.delete(id);
+    static async removeFromFavorites(id) {
+        const db = await this.openDB();
+        const tx = db.transaction(this.STORE_NAME, 'readwrite');
+        const store = tx.objectStore(this.STORE_NAME);
 
-                request.onsuccess = () => {
-                    resolve(true);
-                    console.log(`Story successfully removed from favorites`);
-                };
+        return new Promise((resolve, reject) => {
+            const request = store.delete(id);
 
-                request.onerror = () => {
-                    reject(new Error('Failed to delete story from favorites'));
-                };
-            } catch (error) {
-                reject(error);
-            }
+            request.onsuccess = () => {
+                resolve(true);
+                console.log(`Story berhasil dihapus dari favorit`);
+            };
+
+            request.onerror = () => {
+                reject(new Error('Gagal menghapus story dari favorit'));
+            };
         });
     }
 
-    static getFavorites() {
-        return new Promise(async (resolve, reject) => {
-            try {
-                const db = await this.openDB();
-                const tx = db.transaction(this.STORE_NAME, 'readonly');
-                const store = tx.objectStore(this.STORE_NAME);
-                const request = store.getAll();
+    static async getFavorites() {
+        const db = await this.openDB();
+        const tx = db.transaction(this.STORE_NAME, 'readonly');
+        const store = tx.objectStore(this.STORE_NAME);
 
-                request.onsuccess = () => {
-                    resolve(request.result);
-                };
+        return new Promise((resolve, reject) => {
+            const request = store.getAll();
 
-                request.onerror = () => {
-                    reject(new Error('Failed to fetch favorites list'));
-                };
-            } catch (error) {
-                reject(error);
-            }
+            request.onsuccess = () => {
+                resolve(request.result);
+            };
+
+            request.onerror = () => {
+                reject(new Error('Gagal mengambil daftar favorit'));
+            };
         });
     }
 
-    static isFavorite(id) {
-        return new Promise(async (resolve, reject) => {
-            try {
-                const db = await this.openDB();
-                const tx = db.transaction(this.STORE_NAME, 'readonly');
-                const store = tx.objectStore(this.STORE_NAME);
-                const request = store.get(id);
+    static async isFavorite(id) {
+        const db = await this.openDB();
+        const tx = db.transaction(this.STORE_NAME, 'readonly');
+        const store = tx.objectStore(this.STORE_NAME);
 
-                request.onsuccess = () => {
-                    resolve(!!request.result);
-                };
+        return new Promise((resolve, reject) => {
+            const request = store.get(id);
 
-                request.onerror = () => {
-                    reject(new Error('Failed to check favorite status'));
-                };
-            } catch (error) {
-                reject(error);
-            }
+            request.onsuccess = () => {
+                resolve(!!request.result);
+            };
+
+            request.onerror = () => {
+                reject(new Error('Gagal memeriksa status favorit'));
+            };
         });
     }
 }

@@ -1,5 +1,5 @@
 class IdbHelper {
-    static DB_NAME = 'db-storyapps';
+    static DB_NAME = 'storyapps-db';
     static DB_VERSION = 1;
     static STORE_STORIES = 'stories';
     static STORE_FAVORITES = 'favorites';
@@ -7,7 +7,7 @@ class IdbHelper {
     static async openDB() {
         return new Promise((resolve, reject) => {
             if (!('indexedDB' in window)) {
-                reject(new Error('Browser does not support IndexedDB'));
+                reject(new Error('Browser tidak mendukung IndexedDB'));
                 return;
             }
 
@@ -15,7 +15,7 @@ class IdbHelper {
 
             request.onerror = (event) => {
                 console.error('IndexedDB error:', event.target.error);
-                reject(new Error('Failed to open database'));
+                reject(new Error('Gagal membuka database'));
             };
 
             request.onsuccess = () => {
@@ -28,13 +28,13 @@ class IdbHelper {
                 // Buat object store untuk stories jika belum ada
                 if (!db.objectStoreNames.contains(this.STORE_STORIES)) {
                     db.createObjectStore(this.STORE_STORIES, { keyPath: 'id' });
-                    console.log(`Object store ${this.STORE_STORIES} created successfully`);
+                    console.log(`Object store ${this.STORE_STORIES} berhasil dibuat`);
                 }
 
                 // Buat object store untuk favorites jika belum ada
                 if (!db.objectStoreNames.contains(this.STORE_FAVORITES)) {
                     db.createObjectStore(this.STORE_FAVORITES, { keyPath: 'id' });
-                    console.log(`Object store ${this.STORE_FAVORITES} created successfully`);
+                    console.log(`Object store ${this.STORE_FAVORITES} berhasil dibuat`);
                 }
             };
         });
@@ -52,13 +52,13 @@ class IdbHelper {
 
         return new Promise((resolve, reject) => {
             tx.oncomplete = () => {
-                console.log('Stories successfully saved to IndexedDB');
+                console.log('Stories berhasil disimpan ke IndexedDB');
                 resolve(stories);
             };
 
             tx.onerror = (event) => {
                 console.error('Error menyimpan stories:', event.target.error);
-                reject(new Error('Failed to save stories to IndexedDB'));
+                reject(new Error('Gagal menyimpan stories ke IndexedDB'));
             };
         });
     }
@@ -75,8 +75,8 @@ class IdbHelper {
             };
 
             request.onerror = (event) => {
-                console.error('Error to fetch  stories:', event.target.error);
-                reject(new Error('Failed to fetch stories from IndexedDB'));
+                console.error('Error mengambil stories:', event.target.error);
+                reject(new Error('Gagal mengambil stories dari IndexedDB'));
             };
         });
     }
@@ -93,8 +93,8 @@ class IdbHelper {
             };
 
             request.onerror = (event) => {
-                console.error('Error to fetch story:', event.target.error);
-                reject(new Error('Failed to fetch story from IndexedDB'));
+                console.error('Error mengambil story:', event.target.error);
+                reject(new Error('Gagal mengambil story dari IndexedDB'));
             };
         });
     }
@@ -107,13 +107,13 @@ class IdbHelper {
 
         return new Promise((resolve, reject) => {
             request.onsuccess = () => {
-                console.log(`Story with id ${id} successfully deleted from IndexedDB`);
+                console.log(`Story dengan id ${id} berhasil dihapus dari IndexedDB`);
                 resolve(true);
             };
 
             request.onerror = (event) => {
-                console.error('Error deleted story:', event.target.error);
-                reject(new Error(`Failed to delete story with id ${id} with IndexedDB`));
+                console.error('Error menghapus story:', event.target.error);
+                reject(new Error(`Gagal menghapus story dengan id ${id} dari IndexedDB`));
             };
         });
     }
