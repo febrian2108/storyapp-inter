@@ -82,7 +82,10 @@ class NotificationHelper {
         },
         body: JSON.stringify({
           endpoint: subscription.endpoint,
-          keys: subscription.keys,
+          keys: {
+            p256dh: subscription.getKey('p256dh'),
+            auth: subscription.getKey('auth'),
+          },
         }),
       });
 
